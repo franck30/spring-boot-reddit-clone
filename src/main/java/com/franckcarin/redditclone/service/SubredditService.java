@@ -26,9 +26,10 @@ public class SubredditService {
   private final SubredditMapper subredditMapper;
 
   @Transactional
-  public Subreddit save(SubredditDto subredditDto) {
+  public SubredditDto save(SubredditDto subredditDto) {
     Subreddit save = subredditRepository.save(subredditMapper.mapDtoToSubreddit(subredditDto));
-    return save;
+    subredditDto.setId(save.getId());
+    return subredditDto;
   }
 
 //  private Subreddit mapSubredditDto(SubredditDto subredditDto) {

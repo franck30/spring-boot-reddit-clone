@@ -44,6 +44,7 @@ public class PostService {
     User currentUser = authService.getCurrentUser();
     log.info(currentUser.getUsername());
     log.info(subreddit.getName());
+    System.out.println(currentUser.getUsername());
 
     postRepository.save(postMapper.map(postRequest, subreddit, currentUser)) ;
   }
