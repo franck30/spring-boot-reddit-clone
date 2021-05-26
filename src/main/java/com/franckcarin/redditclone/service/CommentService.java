@@ -46,14 +46,17 @@ public class CommentService {
 
     commentRepository.save(comment);
 
-    String message = mailContentBuilder.build(comment.getUser().getUsername() + "posted a comment on your post." + POST_URL);
+    System.out.println("user" + comment.getUser());
+    System.out.println("username" + comment.getUser().getUsername());
+
+    String message = mailContentBuilder.build(comment.getUser().getUsername() + " posted a comment on your post." + POST_URL);
 
     sendCommentNotification(message, post.getUser());
   }
 
   private void sendCommentNotification(String message, User user) {
 
-      mailService.sendMail(new NotificationEmail(user.getUsername() + "Commented on your post", user.getEmail(), message));
+      mailService.sendMail(new NotificationEmail(user.getUsername() + " Commented on your post", user.getEmail(), message));
   }
 
   public List<CommentsDto> getAllCommentsForPost(Long postId) {

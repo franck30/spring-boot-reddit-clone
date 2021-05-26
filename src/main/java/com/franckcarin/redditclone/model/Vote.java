@@ -20,7 +20,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 public class Vote {
   @Id
   @GeneratedValue(strategy = IDENTITY)
-  private Long vote_id;
+  private Long id;
 
   @Column(name = "vote_type")
   private VoteType voteType;
