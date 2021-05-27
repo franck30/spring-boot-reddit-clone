@@ -2,6 +2,7 @@ package com.franckcarin.redditclone.service;
 
 import com.franckcarin.redditclone.dto.AuthenticationResponse;
 import com.franckcarin.redditclone.dto.LoginRequest;
+import com.franckcarin.redditclone.dto.RefreshTokenRequest;
 import com.franckcarin.redditclone.dto.RegisterRequest;
 import com.franckcarin.redditclone.exception.SpringRedditException;
 import com.franckcarin.redditclone.model.NotificationEmail;
@@ -40,8 +41,10 @@ public class AuthService {
 
   private final JwtProvider jwtProvider;
 
+  private final RefreshTokenService refreshTokenService;
+
   @Transactional
-  public void signup(RegisterRequest registerRequest){
+  public void signup(RegisterRequest registerRequest) {
 
     User user = new User();
     user.setUsername(registerRequest.getUsername());
@@ -56,8 +59,8 @@ public class AuthService {
 
     String token = generateVerificationToken(user);
     mailService.sendMail(new NotificationEmail("Please activate your account",
-            user.getEmail(), "merci de rejoindre la communaute spring reddit, "+
-    "Cliquez sur le lien suivant pour activer votre compte : "+"http://localhost:8080/api/auth/accountVerification/"+token));
+            user.getEmail(), "merci de rejoindre la communaute spring reddit, " +
+            "Cliquez sur le lien suivant pour activer votre compte : " + "http://localhost:8080/api/auth/accountVerification/" + token));
   }
 
   private String generateVerificationToken(User user) {
@@ -89,7 +92,7 @@ public class AuthService {
   @Transactional
   public void fetchUserAndEnable(VerificationToken verificationToken) {
     String username = verificationToken.getUser().getUsername();
-    User user = userRepository.findByUsername(username).orElseThrow(() -> new SpringRedditException("User not found with name - "+username));
+    User user = userRepository.findByUsername(username).orElseThrow(() -> new SpringRedditException("User not found with name - " + username));
     user.setEnabled(true);
     userRepository.save(user);
   }
@@ -100,6 +103,25 @@ public class AuthService {
 
     SecurityContextHolder.getContext().setAuthentication(authenticate);
     String token = jwtProvider.generateToken(authenticate);
-    return new AuthenticationResponse(token, loginRequest.getUsername());
+    return AuthenticationResponse.builder()
+            .authenticationToken(token)
+            .refreshToken(refreshTokenService.generateRefreshToken().getToken())
+            .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+            .username(loginRequest.getUsername())
+            .build();
+  }
+
+  public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+
+    refreshTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+    String token = jwtProvider.generateTokenWithUsername(refreshTokenRequest.getUsername());
+
+    return AuthenticationResponse.builder()
+            .authenticationToken(token)
+            .refreshToken(refreshTokenRequest.getRefreshToken())
+            .expiresAt(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+            .username(refreshTokenRequest.getUsername())
+            .build();
+
   }
 }
